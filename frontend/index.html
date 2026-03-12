@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPro Campus Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0D1B2A;
+            --teal:   #00C9A7;
+            --teal2:  #00A88A;
+            --blue:   #1565C0;
+            --blue2:  #1976D2;
+            --purple: #3D5AFE;
+            --light:  #E8F4FD;
+        }
+
+        body { background: #ffffff; }
+
+        /* ── Scrollbar ── */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f0f0f0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #00C9A7; border-radius: 10px; }
+
+        /* ── Animations ── */
+        .message-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Thinking dots ── */
+        .thinking-dots span {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--teal);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.2s infinite;
+        }
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+            40%           { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* ── Streaming cursor ── */
+        .streaming-cursor {
+            display: inline-block;
+            width: 2px; height: 15px;
+            background: var(--teal);
+            margin-right: 2px;
+            vertical-align: middle;
+            animation: blink 0.6s steps(1) infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0; }
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            background: var(--navy);
+            border-bottom: 2px solid var(--teal);
+        }
+
+        .nav-btn {
+            color: white;
+            font-size: 0.82rem;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid rgba(0,201,167,0.3);
+            opacity: 0.9;
+            transition: all 0.15s ease;
+        }
+        .nav-btn:hover {
+            background: rgba(0,201,167,0.15);
+            border-color: var(--teal);
+            opacity: 1;
+        }
+        .nav-btn.bug:hover {
+            background: rgba(239,68,68,0.2);
+            border-color: #ef4444;
+        }
+
+        /* ── Quick buttons ── */
+        .quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            border: 1.5px solid #d1e8f5;
+            color: var(--blue);
+            font-size: 0.78rem;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .quick-btn:hover {
+            background: #e8f8f5;
+            border-color: var(--teal);
+            color: var(--teal2);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,201,167,0.15);
+        }
+        .quick-btn:active { transform: translateY(0); }
+
+        /* ── User bubble ── */
+        .user-bubble {
+            background: linear-gradient(135deg, #0D1B2A, #1565C0);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        /* ── AI bubble ── */
+        .ai-bubble {
+            background: white;
+            border: 1.5px solid #e0f4ef;
+            border-right: 3px solid var(--teal);
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        /* ── Category badge ── */
+        .cat-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--teal2);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* ── Input area ── */
+        .input-area {
+            background: white;
+            border-top: 1.5px solid #e8f4fd;
+        }
+
+        #user-input {
+            border: 1.5px solid #d1e8f5;
+            transition: all 0.2s ease;
+        }
+        #user-input:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(0,201,167,0.1);
+            outline: none;
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, var(--teal), var(--blue));
+            transition: all 0.2s ease;
+        }
+        #send-btn:hover {
+            background: linear-gradient(135deg, var(--teal2), var(--blue2));
+            transform: scale(1.05);
+        }
+        #send-btn:active { transform: scale(0.96); }
+
+        /* ── Counter ── */
+        #char-counter { color: #c0d8e8; transition: color 0.2s; }
+        #char-counter.warning { color: #f59e0b; }
+        #char-counter.danger  { color: #ef4444; }
+
+        /* ── Response badge ── */
+        .response-badge {
+            font-size: 10px;
+            color: var(--teal);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(13,27,42,0.6);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-header-icon {
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        /* ── Welcome card ── */
+        .welcome-card {
+            background: linear-gradient(135deg, #f0faf8, #e8f4fd);
+            border: 1.5px solid #c8eee8;
+            border-right: 3px solid var(--teal);
+        }
+
+        /* ── Quick chips area ── */
+        .quick-area {
+            background: #fafcff;
+            border-bottom: 1px solid #eaf3fb;
+        }
+
+        /* ── Status dot ── */
+        .status-dot {
+            width: 8px; height: 8px;
+            background: var(--teal);
+            border-radius: 50%;
+            animation: pulse-teal 2s infinite;
+        }
+        @keyframes pulse-teal {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,201,167,0.4); }
+            50% { box-shadow: 0 0 0 5px rgba(0,201,167,0); }
+        }
+    </style>
+</head>
+<body class="font-sans h-screen flex flex-col">
+
+    <!-- ── Navbar ── -->
+    <nav class="navbar text-white px-5 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(0,201,167,0.15); border: 1px solid rgba(0,201,167,0.3);">
+                <i class="fas fa-robot" style="color: var(--teal);"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold leading-tight">CyberPro Smart Assistant</h1>
+                <p class="text-xs opacity-50 leading-tight">עוזר קמפוס חכם</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="nav-btn bug" onclick="openBugModal()">
+                <i class="fas fa-bug text-xs"></i>
+                דווח תקלה
+            </button>
+            <div class="flex items-center gap-2 text-xs opacity-70">
+                <div class="status-dot"></div>
+                פעיל
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Chat ── -->
+    <div id="chat-container" class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar" style="background: #f8fbff;">
+
+        <!-- הודעת פתיחה -->
+        <div class="welcome-card p-4 rounded-2xl shadow-sm max-w-[78%] ml-auto message-fade-in">
+            <p class="font-semibold mb-1" style="color: var(--navy);">שלום! אני העוזר הדיגיטלי של קמפוס CyberPro 👋</p>
+            <p class="text-sm text-slate-500">שאל אותי על שעות פעילות, מיקומי כיתות, מבחנים ותקלות — ואענה מיידית.</p>
+        </div>
+
+    </div>
+
+    <!-- ── Input area ── -->
+    <div class="input-area shadow-xl">
+
+        <!-- שאלות מהירות -->
+        <div class="quick-area px-4 pt-2.5 pb-1.5 flex gap-2 overflow-x-auto custom-scrollbar">
+            <button class="quick-btn" onclick="quickAsk('איפה המזכירות?')">
+                <i class="fas fa-map-marker-alt" style="color:var(--teal)"></i> מזכירות
+            </button>
+            <button class="quick-btn" onclick="quickAsk('מתי מועד א׳ מבחנים?')">
+                <i class="fas fa-calendar" style="color:var(--teal)"></i> מועד א׳
+            </button>
+            <button class="quick-btn" onclick="quickAsk('מה שעות הקפיטריה?')">
+                <i class="fas fa-utensils" style="color:var(--teal)"></i> קפיטריה
+            </button>
+            <button class="quick-btn" onclick="quickAsk('איך מתחברים לוויפי?')">
+                <i class="fas fa-wifi" style="color:var(--teal)"></i> WiFi
+            </button>
+            <button class="quick-btn" onclick="quickAsk('האם יש תקלות פתוחות כרגע?')">
+                <i class="fas fa-tools" style="color:var(--teal)"></i> תקלות פתוחות
+            </button>
+            <button class="quick-btn" onclick="quickAsk('איך מגישים בקשה למלגה?')">
+                <i class="fas fa-graduation-cap" style="color:var(--teal)"></i> מלגה
+            </button>
+        </div>
+
+        <!-- שורת קלט -->
+        <div class="max-w-4xl mx-auto px-4 py-3 flex gap-3 items-center">
+            <div class="flex-1 relative">
+                <input id="user-input" type="text"
+                    placeholder="הקלד את השאלה שלך כאן..."
+                    autocomplete="off"
+                    maxlength="500"
+                    class="w-full rounded-full px-5 py-3 text-sm shadow-sm pr-16"
+                    style="color: var(--navy);"/>
+                <span id="char-counter" class="absolute left-4 top-1/2 -translate-y-1/2 text-xs transition-colors">
+                    0/500
+                </span>
+            </div>
+            <button id="send-btn" onclick="ask()"
+                class="text-white w-11 h-11 rounded-full shadow-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-paper-plane text-sm mr-0.5"></i>
+            </button>
+        </div>
+
+        <p class="text-center text-[10px] pb-2" style="color: #a0b8cc;">
+            Powered by Claude AI &amp; FastAPI &nbsp;·&nbsp; התשובות מבוססות על מאגר הקמפוס — לאישור פנה למזכירות
+        </p>
+    </div>
+
+    <!-- ── Modal דיווח תקלה ── -->
+    <div id="bug-modal" class="modal-overlay" onclick="closeBugModalOutside(event)">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="modal-header-icon w-10 h-10 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg" style="color: var(--navy);">דיווח על תקלה</h2>
+                        <p class="text-xs text-slate-400">הדיווח יועבר לצוות הטכני</p>
+                    </div>
+                </div>
+                <button onclick="closeBugModal()" class="text-slate-300 hover:text-slate-500 text-xl transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium block mb-1.5" style="color: var(--navy);">מיקום התקלה</label>
+                    <input id="bug-location" type="text" placeholder="לדוגמה: שירותים קומה 2, בניין 3"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all"
+                        style="color: var(--navy);"
+                        onfocus="this.style.borderColor='var(--teal)'; this.style.boxShadow='0 0 0 3px rgba(0,201,167,0.1)'"
+                        onblur="this.style.borderColor=''; this.style.boxShadow=''"/>
+                </div>
+                <div>
+                    <label class="text-sm font-medium block mb-1.5" style="color: var(--navy);">תיאור התקלה</label>
+                    <textarea id="bug-description" rows="3" placeholder="תאר את התקלה בפירוט..."
+                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none resize-none transition-all"
+                        style="color: var(--navy);"
+                        onfocus="this.style.borderColor='var(--teal)'; this.style.boxShadow='0 0 0 3px rgba(0,201,167,0.1)'"
+                        onblur="this.style.borderColor=''; this.style.boxShadow=''"></textarea>
+                </div>
+            </div>
+            <div id="bug-feedback" class="hidden mt-3 text-sm text-center py-2 rounded-xl"></div>
+            <div class="flex gap-3 mt-5">
+                <button onclick="closeBugModal()"
+                    class="flex-1 border border-slate-200 text-slate-500 py-2.5 rounded-xl text-sm hover:bg-slate-50 transition-all">
+                    ביטול
+                </button>
+                <button onclick="submitBugReport()"
+                    class="flex-1 text-white py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md"
+                    style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fas fa-paper-plane ml-1"></i> שלח דיווח
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input     = document.getElementById('user-input');
+        const sendBtn   = document.getElementById('send-btn');
+        const container = document.getElementById('chat-container');
+        const counter   = document.getElementById('char-counter');
+
+        // ── Counter ──
+        input.addEventListener('input', () => {
+            const len = input.value.length;
+            counter.textContent = `${len}/500`;
+            counter.className = 'absolute left-4 top-1/2 -translate-y-1/2 text-xs transition-colors ' +
+                (len > 450 ? 'danger' : len > 350 ? 'warning' : '');
+        });
+
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ask(); } });
+
+        function scrollBottom() { setTimeout(() => container.scrollTop = container.scrollHeight, 30); }
+        function escapeHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function formatTime() { return new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); }
+
+        // ── שאלות מהירות ──
+        function quickAsk(q) { input.value = q; counter.textContent = `${q.length}/500`; ask(); }
+
+        // ── הודעת משתמש ──
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-start message-fade-in';
+            div.innerHTML = `
+                <div class="user-bubble px-4 py-3 shadow-sm max-w-[78%] text-sm leading-relaxed">
+                    ${escapeHtml(text)}
+                </div>
+                <span class="text-[10px] mt-1 mr-1" style="color:#a0b8cc">${formatTime()}</span>`;
+            container.appendChild(div); scrollBottom();
+        }
+
+        // ── חשיבה ──
+        function addThinking() {
+            const div = document.createElement('div');
+            div.id = 'thinking-indicator';
+            div.className = 'flex justify-end message-fade-in';
+            div.innerHTML = `
+                <div class="ai-bubble px-5 py-3 shadow-sm flex items-center gap-2">
+                    <span class="text-sm italic" style="color:#94a3b8">חושב</span>
+                    <div class="thinking-dots flex items-center"><span></span><span></span><span></span></div>
+                </div>`;
+            container.appendChild(div); scrollBottom();
+        }
+
+        function removeThinking() { const el = document.getElementById('thinking-indicator'); if (el) el.remove(); }
+
+        // ── תשובת AI ──
+        function addAIMessage(category, answer, responseTime) {
+            removeThinking();
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-end message-fade-in';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'ai-bubble p-4 shadow-sm max-w-[78%]';
+
+            const cat = document.createElement('span');
+            cat.className = 'cat-badge';
+            cat.innerHTML = `<i class="fas fa-tag ml-1"></i>${escapeHtml(category)}`;
+
+            const ans = document.createElement('p');
+            ans.className = 'text-sm leading-relaxed';
+            ans.style.color = '#1a2940';
+
+            bubble.appendChild(cat);
+            bubble.appendChild(ans);
+            div.appendChild(bubble);
+
+            const meta = document.createElement('div');
+            meta.className = 'flex items-center gap-3 mt-1 ml-1';
+            if (responseTime) {
+                meta.innerHTML = `
+                    <span class="response-badge"><i class="fas fa-bolt text-xs"></i>${responseTime}</span>
+                    <span class="text-[10px]" style="color:#a0b8cc">${formatTime()}</span>`;
+            } else {
+                meta.innerHTML = `<span class="text-[10px]" style="color:#a0b8cc">${formatTime()}</span>`;
+            }
+            div.appendChild(meta);
+            container.appendChild(div);
+            scrollBottom();
+            streamText(ans, answer);
+        }
+
+        // ── Streaming ──
+        function streamText(el, text) {
+            el.innerHTML = '<span class="streaming-cursor"></span>';
+            let i = 0;
+            const iv = setInterval(() => {
+                if (i < text.length) {
+                    const c = el.querySelector('.streaming-cursor');
+                    if (c) c.insertAdjacentText('beforebegin', text[i]);
+                    i++; scrollBottom();
+                } else {
+                    const c = el.querySelector('.streaming-cursor');
+                    if (c) c.remove();
+                    clearInterval(iv);
+                }
+            }, 20);
+        }
+
+        function addError(msg) {
+            removeThinking();
+            const div = document.createElement('div');
+            div.className = 'flex justify-center message-fade-in';
+            div.innerHTML = `
+                <div class="text-xs px-4 py-2 rounded-full flex items-center gap-2"
+                     style="background:#fff0f0; color:#ef4444; border:1px solid #fecaca">
+                    <i class="fas fa-exclamation-circle"></i> ${escapeHtml(msg)}
+                </div>`;
+            container.appendChild(div); scrollBottom();
+        }
+
+        // ── שליחה ──
+        async function ask() {
+            const question = input.value.trim();
+            if (!question) return;
+            input.value = ''; counter.textContent = '0/500'; counter.className = 'absolute left-4 top-1/2 -translate-y-1/2 text-xs transition-colors';
+            input.disabled = true; sendBtn.disabled = true;
+            addUserMessage(question); addThinking();
+            const t0 = Date.now();
+            try {
+                const res = await fetch('http://127.0.0.1:8000/assistant/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || `שגיאת שרת ${res.status}`); }
+                const data = await res.json();
+                const elapsed = ((Date.now() - t0) / 1000).toFixed(1) + ' שניות';
+                addAIMessage(data.category, data.answer, elapsed);
+            } catch(e) { addError(e.message || 'וודא שהשרת רץ בטרמינל'); }
+            finally { input.disabled = false; sendBtn.disabled = false; input.focus(); }
+        }
+
+        // ── Bug modal ──
+        function openBugModal() { document.getElementById('bug-modal').classList.add('open'); document.getElementById('bug-location').focus(); }
+        function closeBugModal() {
+            document.getElementById('bug-modal').classList.remove('open');
+            document.getElementById('bug-location').value = '';
+            document.getElementById('bug-description').value = '';
+            document.getElementById('bug-feedback').classList.add('hidden');
+        }
+        function closeBugModalOutside(e) { if (e.target.id === 'bug-modal') closeBugModal(); }
+
+        async function submitBugReport() {
+            const location    = document.getElementById('bug-location').value.trim();
+            const description = document.getElementById('bug-description').value.trim();
+            const feedback    = document.getElementById('bug-feedback');
+            if (!location || !description) {
+                feedback.className = 'mt-3 text-sm text-center py-2 rounded-xl';
+                feedback.style.cssText = 'background:#fffbeb; color:#d97706; display:block';
+                feedback.textContent = 'נא למלא את כל השדות'; return;
+            }
+            try {
+                const res = await fetch('http://127.0.0.1:8000/assistant/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location, description })
+                });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                feedback.className = 'mt-3 text-sm text-center py-2 rounded-xl';
+                feedback.style.cssText = 'background:#f0faf8; color:#00a88a; border:1px solid #c8eee8; display:block';
+                feedback.textContent = `✓ דיווח #${data.id} התקבל! הועבר לטיפול`;
+                setTimeout(() => {
+                    closeBugModal();
+                    addAIMessage('Technical Issue', `תודה על הדיווח! תקלה #${data.id} ב"${location}" נפתחה במערכת ותטופל בהקדם.`, null);
+                }, 2000);
+            } catch {
+                feedback.className = 'mt-3 text-sm text-center py-2 rounded-xl';
+                feedback.style.cssText = 'background:#fff0f0; color:#ef4444; border:1px solid #fecaca; display:block';
+                feedback.textContent = 'שגיאה בשליחה — וודא שהשרת פעיל';
+            }
+        }
+    </script>
+</body>
+</html>
