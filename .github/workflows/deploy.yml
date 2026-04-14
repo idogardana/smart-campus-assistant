@@ -19,7 +19,5 @@ jobs:
           script: |                                                                                                                                      
             cd ~/apps/smart-campus-assistant
             git pull origin main                                                                                                                         
-            docker build -t my-api .
-            docker stop my-api || true
-            docker rm my-api || true
-            docker run -d --name my-api -p 8080:8000 my-api
+            docker-compose down
+            docker-compose up -d --build
