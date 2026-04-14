@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   backend:
     build: .
@@ -8,3 +9,13 @@ services:
       - .env
     volumes:
       - ./campus_assistant.db:/app/campus_assistant.db
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
