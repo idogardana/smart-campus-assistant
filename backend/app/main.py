@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .router import router
 
-app = FastAPI(title="Smart Campus Assistant")
+app = FastAPI(title="Smart Campus Assistant API")
 
 app.add_middleware(
     CORSMiddleware,
